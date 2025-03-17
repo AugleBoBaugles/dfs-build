@@ -14,6 +14,25 @@ public class Build {
    * @param k the maximum word length (exclusive)
    */
   public static void printShortWords(Vertex<String> vertex, int k) {
+    Set<Vertex<String>> visited = new HashSet<>();
+    printShortWords(vertex, k, visited);
+  }
+
+  private static void printShortWords(Vertex<String> vertex, int k, Set<Vertex<String>> visited){
+    // base case - null or has been visited
+    if (vertex == null || !visited.add(vertex)) return;
+
+    // action - print data if shorter than k
+    if(vertex.data.length() < k) System.out.println(vertex.data);
+
+    // recurse
+    if (vertex.neighbors == null) return;
+
+    for(var neighbor : vertex.neighbors){
+      printShortWords(neighbor, k, visited);
+    }
+
+
   }
 
   /**
@@ -23,7 +42,27 @@ public class Build {
    * @return the longest reachable word, or an empty string if the vertex is null
    */
   public static String longestWord(Vertex<String> vertex) {
-    return "";
+    if (vertex == null) return "";
+    Set<Vertex<String>> visited = new HashSet<>();
+    String longestWord = vertex.data;
+
+    return longestWord(vertex, visited, longestWord);
+  }
+
+  private static String longestWord(Vertex<String> vertex, Set<Vertex<String>> visited, String longestWord){
+    if (vertex == null || !visited.add(vertex)) return longestWord;
+
+    if (vertex.data.length() > longestWord.length()){
+      longestWord = vertex.data;
+    }
+
+    for (var neighbor : vertex.neighbors){
+      longestWord = longestWord(neighbor, visited, longestWord);
+      
+    }
+
+    return longestWord;
+
   }
 
   /**
@@ -34,6 +73,25 @@ public class Build {
    * @param <T> the type of values stored in the vertices
    */
   public static <T> void printSelfLoopers(Vertex<T> vertex) {
+    Set<Vertex<T>> visited = new HashSet<>();
+    printSelfLoopers(vertex, visited);
+
+  }
+
+  private static <T> void printSelfLoopers(Vertex<T> vertex, Set<Vertex<T>> vistited){
+    // base case - vertex is not null and not visited
+    if (vertex == null || !vistited.add(vertex)) return;
+
+    // loop through neighbors - check if neighbor data == vertex data
+    for (var neighbor : vertex.neighbors){
+      if (neighbor.neighbors.contains(neighbor)){
+        System.out.println(neighbor.data);
+      }
+
+      printSelfLoopers(vertex, vistited);
+    }
+
+    
   }
 
   /**
@@ -45,7 +103,24 @@ public class Build {
    * @return true if the destination is reachable from the start, false otherwise
    */
   public static boolean canReach(Airport start, Airport destination) {
-    return false;
+    if (start == destination) return true;
+    Set<Airport> visited = new HashSet<>();
+    boolean found = false;
+    return canReach(start, destination, visited, found);
+  }
+
+  private static boolean canReach(Airport start, Airport destination, Set<Airport> visited, boolean found){
+    // base case - airport is null or visited
+    if (start == null || destination == null || !visited.add(start)) return found;
+
+    // base case - airport can reach destination 
+    if (start.getOutboundFlights().contains(destination)) found = true;
+
+    for(var flight : start.getOutboundFlights()){
+      found = canReach(flight, destination, visited, found);
+    }
+
+    return found;
   }
 
   /**
@@ -58,6 +133,23 @@ public class Build {
    * @return a set of values that cannot be reached from the starting value
    */
   public static <T> Set<T> unreachable(Map<T, List<T>> graph, T starting) {
-    return new HashSet<>();
+    Set<T> unreachable = new HashSet<>();
+    Set<T> visited = new HashSet<>();
+
+    unreachable.addAll(graph.keySet());
+    unreachable.remove(starting);
+
+    return unreachable(graph, starting, visited, unreachable);
+  }
+
+  private static <T> Set<T> unreachable(Map<T, List<T>> graph, T starting, Set<T> visited, Set<T> unreachable){
+    if (starting == null || !graph.containsKey(starting) || !visited.add(starting)) return unreachable;
+
+    for (var neighbor : graph.get(starting)){
+      unreachable.remove(neighbor);
+      unreachable = unreachable(graph, neighbor, visited, unreachable);
+    }
+
+    return unreachable;
   }
 }
